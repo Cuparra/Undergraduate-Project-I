@@ -1,0 +1,200 @@
+__author__ = 'tiago'
+
+from swarm import Swarm, np
+from pso import MOPSO
+from numpy import exp, where, sin, pi, sum, cos, log
+import function
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import mpl_toolkits.mplot3d.axes3d as p3
+
+from multiprocessing import Process
+
+# FALTA limitar as variaveis em l_num e h_num
+
+def process1():
+
+    f1 = open("Ghv_ZDT1","w")
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 30 ,2, 2, 1, 0)
+        mopso       = MOPSO(swarm,function.ZDT1)
+        sol         = mopso.Optimize()
+
+
+        statistic = function.HyperVolume(sol,50,[11,11])
+        print "1", i, statistic
+
+        f1.write("%lf\n" % statistic)
+
+    f1.close()
+
+def process2():
+
+    f1 = open("Ghv_ZDT2","w")
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 30 ,2, 2, 1, 0)
+        mopso       = MOPSO(swarm,function.ZDT2)
+        sol         = mopso.Optimize()
+
+
+        statistic = function.HyperVolume(sol,50,[11,11])
+        print "2", i, statistic
+
+        f1.write("%lf\n" % statistic)
+
+    f1.close()
+
+def process3():
+
+    f1 = open("Ghv_ZDT3","w")
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 30 ,2, 2, 1, 0)
+        mopso       = MOPSO(swarm,function.ZDT3)
+        sol         = mopso.Optimize()
+
+        statistic = function.HyperVolume(sol,50,[11,11])
+
+        print "3", i, statistic
+        f1.write("%lf\n" % statistic)
+
+    f1.close()
+
+
+def process6():
+
+    f1 = open("Ghv_ZDT6","w")
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 10 ,2, 2, 1, 0)
+        mopso       = MOPSO(swarm,function.ZDT6)
+        sol         = mopso.Optimize()
+
+
+        statistic = function.HyperVolume(sol,50,[11,11])
+        print "6", i, statistic
+
+        f1.write("%lf\n" % statistic)
+
+    f1.close()
+
+def process7():
+
+    f1 = open("G_ZDT4","w")
+    f2 = open("Ghv_ZDT4","w")
+    f3 = open("Gs_ZDT4","w")
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 3 ,2, 2, 4, -4)
+        mopso       = MOPSO(swarm,function.FON)
+        sol         = mopso.Optimize()
+
+        stat1 = function.staticFON(swarm.particles.bestPosition,50)
+        stat2 = function.HyperVolume(sol,50,[11,11])
+        stat3 = function.Spacing(sol,50)
+
+        f1.write("%lf\n" % stat1)
+        f2.write("%lf\n" % stat2)
+        f3.write("%lf\n" % stat3)
+
+        print i, " 7 = ", stat1, stat2, stat3
+
+    f1.close()
+    f2.close()
+    f3.close()
+
+def processZDT4():
+
+    stat1 = np.zeros(100,np.float64)
+    stat2 = np.zeros(100,np.float64)
+    stat3 = np.zeros(100,np.float64)
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 30 ,2, 2, 1, 0)
+        mopso       = MOPSO(swarm,function.ZDT4)
+        sol         = mopso.Optimize()
+
+        stat1[i] = function.staticZDT4(sol,50)
+        stat2[i] = function.HyperVolume(sol,50,[11,11])
+        stat3[i] = function.Spacing(sol,50)
+        print stat1[i], stat2[i], stat3[i]
+
+    PrintStat(stat1)
+    PrintStat(stat2)
+    PrintStat(stat3)
+
+def processVNT():
+
+    stat1 = np.zeros(100,np.float64)
+    stat2 = np.zeros(100,np.float64)
+    stat3 = np.zeros(100,np.float64)
+
+    for i in range(100):
+
+        swarm       = Swarm(50, 2 ,3, 3, 3, -3)
+        mopso       = MOPSO(swarm,function.FON)
+        sol         = mopso.Optimize()
+
+        stat1[i] = function.staticVNT(sol,swarm.particles.bestPosition,50)
+        stat2[i] = function.HyperVolume(sol,50,[11,11])
+        stat3[i] = function.Spacing(sol,50)
+        print stat1[i], stat2[i], stat3[i]
+
+    PrintStat(stat1)
+    PrintStat(stat2)
+    PrintStat(stat3)
+
+
+def PrintStat(stat):
+
+    print "Mean = ", np.mean(stat)
+    print "Var = ", np.var(stat)
+    print "Min = ", np.amin(stat)
+    print "Max = ", np.amax(stat),"\n"
+
+def Statistics(string):
+
+    stat1 = np.zeros(100,np.float64)
+    stat2 = np.zeros(100,np.float64)
+
+    with open(string) as f1:
+        floats = np.array([map(float, line.split(' ')) for line in f1])
+
+    for i in range(100):
+        stat1[i] = function.HyperVolume(floats[i*50:(i+1)*50],50,[11,11])
+        stat2[i] = function.Spacing(floats[i*50:(i+1)*50],50)
+
+    print "Ghv"
+    PrintStat(stat1)
+
+    print "Gs"
+    PrintStat(stat2)
+
+def first(string, static):
+
+    stat1 = np.zeros(100,np.float64)
+    with open(string) as f1:
+        floats = np.array([map(float, line.split(' ')) for line in f1])
+
+    with open(string) as f1:
+        floats1 = np.array([map(float, line.split(' ')) for line in f1])
+
+    for i in range(100):
+        stat1[i] = static(floats1[i*50:(i+1)*50],50)
+
+    PrintStat(stat1)
+
+def main():
+
+    process7()
+
+if __name__ == "__main__": main()
